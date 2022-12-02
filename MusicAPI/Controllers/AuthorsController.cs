@@ -97,33 +97,21 @@ namespace MusicAPI.Controllers
         // PUT: api/Authors/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutAuthor(int id, Author author)
+        public async Task<IActionResult> PutAuthor(int id, AuthorCreationDTO authorCreationDTO)
         {
-            if (id != author.AuthorId)
+            var authorExists = await _context.Authors.AnyAsync(a => a.AuthorId == id);
+            if (!authorExists)
             {
                 return BadRequest();
             }
-
-            _context.Entry(author).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!AuthorExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            var author = mapper.Map<Author>(authorCreationDTO);
+            author.AuthorId = id;
+            _context.Update(author);
+            await _context.SaveChangesAsync();
+                       
+            return Ok();
         }
+
 
         // POST: api/Authors
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
